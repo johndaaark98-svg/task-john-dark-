@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+<meta name="theme-color" content="#0F0E0C" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="TASK JOHN DARK" />
+<title>TASK JOHN DARK</title>
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<style>
+  *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+  html, body { height:100%; overflow:hidden; -webkit-font-smoothing:antialiased; }
+  body {
+    background:#0F0E0C; color:#F5F1E8;
+    font-family:'DM Sans',-apple-system,system-ui,sans-serif;
+    font-size:15px; -webkit-tap-highlight-color:transparent;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  button { font-family:inherit; cursor:pointer; background:none; border:none; color:inherit; }
+  input,select,textarea {
+    font-family:inherit; background:transparent; color:#F5F1E8;
+    outline:none; border:none; font-size:inherit;
+  }
+  input::placeholder, textarea::placeholder { color:#5A5248; }
+  select { background:#1C1A17; }
+  select option { background:#1C1A17; color:#F5F1E8; }
+  .display { font-family:'Fraunces',serif; letter-spacing:-0.02em; }
+  ::-webkit-scrollbar { width:4px; height:4px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:#2A2724; border-radius:2px; }
+  .hide-scroll::-webkit-scrollbar { display:none; }
+  .hide-scroll { scrollbar-width:none; }
+  .task-row { transition:background .12s, transform .1s; }
+  .task-row:active { transform:scale(0.997); }
+  @keyframes su { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  .su { animation:su .25s ease; }
+  .notes-area {
+    width:100%; min-height:90px; max-height:240px;
+    padding:12px 14px; border-radius:10px;
+    background:rgba(255,255,255,0.02); color:#C8C2B5;
+    font-size:14px; line-height:1.55; resize:vertical;
+    border:1px solid #1F1C19;
+  }
+  .notes-area:focus { background:rgba(255,255,255,0.04); border-color:#3A352F; }
+
+  /* ===== SPLASH SCREEN ===== */
+  #splash {
+    position:fixed; inset:0; z-index:9999;
+    background:#3D576C;
+    overflow:hidden;
+    cursor:pointer;
+    transition: opacity .7s cubic-bezier(.4,0,.2,1);
+  }
+  #splash.dismissed { opacity:0; pointer-events:none; }
+  .splash-img {
+    position:absolute; inset:0;
+    background-image: url('splash.jpg');
+    background-size: cover;
+    background-position: center;
+    opacity:0;
+    transform: scale(1.10);
+    animation: splash-img-in 1.4s cubic-bezier(.2,.6,.2,1) forwards;
+  }
+  @keyframes splash-img-in {
+    0%   { opacity:0; transform:scale(1.10); filter:brightness(0.7); }
+    100% { opacity:1; transform:scale(1.00); filter:brightness(1); }
+  }
+  .splash-vignette {
+    position:absolute; inset:0;
+    background: linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.15) 35%, rgba(0,0,0,0) 60%);
+    pointer-events:none;
+  }
+  .splash-text {
+    position:absolute; left:0; right:0; bottom:11vh;
+    text-align:center; z-index:2; padding: 0 24px;
+  }
+  .splash-title {
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    font-size: clamp(28px, 8.5vw, 64px);
+    letter-spacing: 0.18em;
+    color: #F5F1E8;
+    text-shadow: 0 2px 24px rgba(0,0,0,0.55);
+    opacity:0;
+    transform: translateY(14px);
+    animation: splash-text-in 1s cubic-bezier(.2,.6,.2,1) .55s forwards;
+    white-space:nowrap;
+  }
+  .splash-hairline {
+    width:48px; height:1px; background:rgba(245,241,232,0.4);
+    margin: 18px auto 14px;
+    opacity:0;
+    animation: splash-text-in .8s ease 1.0s forwards;
+  }
+  .splash-sub {
+    font-family:'DM Sans', sans-serif;
+    font-size:11px; letter-spacing:.32em;
+    color:rgba(245,241,232,0.65);
+    text-transform:uppercase;
+    opacity:0;
+    animation: splash-text-in .8s ease 1.25s forwards, splash-pulse 2.6s ease 2.2s infinite;
+  }
+  @keyframes splash-text-in {
+    to { opacity:1; transform:translateY(0); }
+  }
+  @keyframes splash-pulse {
+    0%, 100% { opacity:0.65; }
+    50%      { opacity:0.30; }
+  }
+</style>
+</head>
+<body>
+<div id="splash" onclick="dismissSplash()">
+  <div class="splash-img"></div>
+  <div class="splash-vignette"></div>
+  <div class="splash-text">
+    <div class="splash-title">TASK JOHN DARK</div>
+    <div class="splash-hairline"></div>
+    <div class="splash-sub">tocca per entrare</div>
+  </div>
+</div>
+<script>
+  let _splashGone = false;
+  function dismissSplash(){
+    if (_splashGone) return;
+    _splashGone = true;
+    const s = document.getElementById('splash');
+    if (!s) return;
+    s.classList.add('dismissed');
+    setTimeout(() => s.remove(), 750);
+  }
+  // Auto-dismiss after 3.5s
+  setTimeout(dismissSplash, 3500);
+</script>
+<div id="root"></div>
+<script>
+const h = React.createElement;
+const { useState, useMemo, useEffect } = React;
+
+const PROJECTS = [
+  { id:"concerto",    name:"Concerto",        color:"#B794F4", bg:"rgba(183,148,244,0.13)", icon:"📡" },
+  { id:"eurofiltri",  name:"Eurofiltri",      color:"#4FD1C5", bg:"rgba(79,209,197,0.13)",  icon:"⚙️" },
+  { id:"pact",        name:"Pact",            color:"#F6AD55", bg:"rgba(246,173,85,0.13)",  icon:"👥" },
+  { id:"mainardi",    name:"Studio Mainardi", color:"#F687B3", bg:"rgba(246,135,179,0.13)", icon:"🏢" },
+  { id:"rialziamoci", name:"Rialziamoci",     color:"#68D391", bg:"rgba(104,211,145,0.13)", icon:"📣" },
+];
+const SPECIAL = [
+  { id:"oggi",   name:"Oggi",      color:"#E8B339", bg:"rgba(232,179,57,0.13)",   icon:"☀️" },
+  { id:"attesa", name:"In attesa", color:"#9CA3AF", bg:"rgba(156,163,175,0.13)",  icon:"⏸" },
+];
+const ALL_TABS = [...SPECIAL, ...PROJECTS];
+const TM = Object.fromEntries(ALL_TABS.map(t => [t.id, t]));
+const PRIO = {
+  alta:  { label:"Alta",  color:"#FC8181", bg:"rgba(252,129,129,0.16)" },
+  media: { label:"Media", color:"#F6AD55", bg:"rgba(246,173,85,0.16)" },
+  bassa: { label:"Bassa", color:"#68D391", bg:"rgba(104,211,145,0.16)" },
+};
+
+function todayISO(){ const d=new Date(); d.setHours(0,0,0,0); return d.toISOString().slice(0,10); }
+function addDays(iso, n){ const d=new Date(iso); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
+const TODAY = todayISO();
+
+const SEED = {
+  tasks: [
+    { id:"c1", project:"concerto",    text:"Trovare nuovo nome per la startup",            priority:"alta",  status:"open",    pinned:true,  waitingFor:"", waitingSince:null, deadline:addDays(TODAY,1), note:"Marchio 'Radio Italia Il Concerto' già registrato. Per l'incontro avvocati di domani." },
+    { id:"c2", project:"concerto",    text:"Preparare materiali incontro avvocati",        priority:"alta",  status:"open",    pinned:true,  waitingFor:"", waitingSince:null, deadline:addDays(TODAY,1), note:"Validazione startup + finanziamento 500k (90% fondo perduto)" },
+    { id:"c3", project:"concerto",    text:"PDF costi infrastruttura streaming",           priority:"media", status:"waiting", pinned:false, waitingFor:"Jay (programmatore)", waitingSince:Date.now()-3*86400000, deadline:"", note:"Necessario per business plan completo" },
+    { id:"e1", project:"eurofiltri",  text:"Acconto iniziale per il sito",                 priority:"alta",  status:"waiting", pinned:true,  waitingFor:"Paolo (capo Eurofiltri)", waitingSince:Date.now()-5*86400000, deadline:"", note:"Sito €2.800 — principio fisso: niente acconto, niente lavoro" },
+    { id:"e2", project:"eurofiltri",  text:"Briefing sito a Jay",                          priority:"media", status:"open",    pinned:false, waitingFor:"", waitingSince:null, deadline:"", note:"Jay riceve €650. Solo dopo acconto ricevuto." },
+    { id:"e3", project:"eurofiltri",  text:"Pianificare contenuti social + Google Ads",    priority:"bassa", status:"open",    pinned:false, waitingFor:"", waitingSince:null, deadline:"", note:"€1.000/mese — inizia dopo go-live del sito" },
+    { id:"p1", project:"pact",        text:"Aggiornamento roadmap prodotto",               priority:"media", status:"open",    pinned:false, waitingFor:"", waitingSince:null, deadline:"", note:"" },
+    { id:"p2", project:"pact",        text:"Revisione UX per nutrizionisti e PT",          priority:"media", status:"open",    pinned:false, waitingFor:"", waitingSince:null, deadline:"", note:"" },
+    { id:"p3", project:"pact",        text:"Valutare integrazioni con fisioterapisti",     priority:"bassa", status:"open",    pinned:false, waitingFor:"", waitingSince:null, deadline:"", note:"" },
+    { id:"m1", project:"mainardi",    text:"Proposta pacchetto AI automation €18k",        priority:"alta",  status:"open",    pinned:false, waitingFor:"", waitingSince:null, deadline:addDays(TODAY,14), note:"Obiettivo: chiudere entro 1 mese" },
+    { id:"m2", project:"mainardi",    text:"Fissare meeting con Studio Mainardi",          priority:"media", status:"open",    pinned:false, waitingFor:"", waitingSince:null, deadline:"", note:"" },
+    { id:"m3", project:"mainardi",    text:"Preparare demo workflow AI",                   priority:"bassa", status:"open",    pinned:false, waitingFor:"", waitingSince:null, deadline:"", note:"" },
+    { id:"r1", project:"rialziamoci", text:"Post settimanali Facebook + Instagram",        priority:"media", status:"open",    pinned:false, waitingFor:"", waitingSince:null, deadline:"", note:"Compenso €1.000/mese" },
+    { id:"r2", project:"rialziamoci", text:"Contenuti YouTube",                            priority:"media", status:"open",    pinned:false, waitingFor:"", waitingSince:null, deadline:"", note:"" },
+    { id:"r3", project:"rialziamoci", text:"Aggiornamento Google My Business",             priority:"bassa", status:"open",    pinned:false, waitingFor:"", waitingSince:null, deadline:"", note:"" },
+    { id:"r4", project:"rialziamoci", text:"Gestione nuove omologhe",                      priority:"media", status:"open",    pinned:false, waitingFor:"", waitingSince:null, deadline:"", note:"" },
+  ],
+  notes: {
+    concerto:    "💡 Brainstorm nomi (da scegliere entro stasera):\n• \n• \n• \n• \n\n📌 Da ricordare per incontro avvocati:\n— ",
+    eurofiltri:  "Messaggio da scrivere a Paolo:\n\"\"\n\nContenuti social da preparare (dopo go-live):\n- ",
+    pact:        "",
+    mainardi:    "Punti chiave del pitch €18k:\n• ROI in 6 mesi\n• Workflow specifici dello studio\n• Demo concreta su un loro caso\n\nObiezioni prevedibili:\n— ",
+    rialziamoci: "Calendario editoriale:\n• Lun — \n• Mer — \n• Ven — \n\nIdee video YouTube:\n— ",
+  }
+};
+
+const KEY = "operativo-v3";
+function loadState(){
+  try{ const r=localStorage.getItem(KEY); if(!r) return SEED; const p=JSON.parse(r); return { tasks:p.tasks||SEED.tasks, notes:p.notes||SEED.notes }; }
+  catch{ return SEED; }
+}
+function persist(d){ try{ localStorage.setItem(KEY, JSON.stringify(d)); }catch{} }
+
+function greeting(){
+  const hr = new Date().getHours();
+  if (hr < 12) return "Buongiorno";
+  if (hr < 18) return "Buon pomeriggio";
+  return "Buonasera";
+}
+function daysAgo(ts){ if(!ts) return 0; return Math.floor((Date.now()-ts)/86400000); }
+function formatDeadline(iso){
+  if(!iso) return null;
+  const diff = Math.round((new Date(iso) - new Date(TODAY)) / 86400000);
+  if (diff < 0)   return { text:`Scaduto ${Math.abs(diff)}g fa`, color:"#FC8181", bg:"rgba(252,129,129,0.18)" };
+  if (diff === 0) return { text:"Oggi",        color:"#FC8181", bg:"rgba(252,129,129,0.16)" };
+  if (diff === 1) return { text:"Domani",      color:"#F6AD55", bg:"rgba(246,173,85,0.16)" };
+  if (diff <= 7)  return { text:`Tra ${diff}g`, color:"#E8B339", bg:"rgba(232,179,57,0.14)" };
+  const d=new Date(iso); const m=["gen","feb","mar","apr","mag","giu","lug","ago","set","ott","nov","dic"];
+  return { text:`${d.getDate()} ${m[d.getMonth()]}`, color:"#8A8278", bg:"rgba(138,130,120,0.14)" };
+}
+function smartSort(tasks){
+  return [...tasks].sort((a,b)=>{
+    if (a.pinned !== b.pinned) return b.pinned ? 1 : -1;
+    const so = { open:0, waiting:1, done:2 };
+    if (so[a.status] !== so[b.status]) return so[a.status]-so[b.status];
+    const da = a.deadline ? new Date(a.deadline).getTime() : Infinity;
+    const db = b.deadline ? new Date(b.deadline).getTime() : Infinity;
+    if (da !== db) return da-db;
+    const po = { alta:0, media:1, bassa:2 };
+    return po[a.priority] - po[b.priority];
+  });
+}
+
+// ============ APP ============
+function App(){
+  const initial = useMemo(loadState, []);
+  const [tasks, setTasks] = useState(initial.tasks);
+  const [notes, setNotes] = useState(initial.notes);
+  const [tab, setTab] = useState("oggi");
+  const [showDone, setShowDone] = useState(false);
+  const [showNotes, setShowNotes] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [isMobile, setIsMobile] = useState(()=>window.innerWidth<768);
+  const [form, setForm] = useState({ text:"", note:"", priority:"media", project:"concerto", deadline:"", status:"open", waitingFor:"", pinned:false });
+
+  useEffect(()=>{ persist({ tasks, notes }); }, [tasks, notes]);
+  useEffect(()=>{
+    const onR = ()=>setIsMobile(window.innerWidth<768);
+    window.addEventListener("resize", onR);
+    return ()=>window.removeEventListener("resize", onR);
+  },[]);
+
+  const updateTask = (id,p) => setTasks(t=>t.map(x=>x.id===id?{...x,...p}:x));
+  const deleteTask = (id)   => setTasks(t=>t.filter(x=>x.id!==id));
+
+  const toggleDone = id => {
+    const t = tasks.find(x=>x.id===id); if(!t) return;
+    updateTask(id, { status: t.status==="done"?"open":"done" });
+  };
+  const togglePin = id => {
+    const t = tasks.find(x=>x.id===id); if(!t) return;
+    if (!t.pinned){
+      const cur = tasks.filter(x=>x.pinned);
+      if (cur.length>=3 && cur[0]) updateTask(cur[0].id, { pinned:false });
+    }
+    updateTask(id, { pinned: !t.pinned });
+  };
+
+  const startNew = () => {
+    setForm({
+      text:"", note:"", priority:"media",
+      project: (tab==="oggi"||tab==="attesa") ? "concerto" : tab,
+      deadline:"", status: tab==="attesa" ? "waiting" : "open",
+      waitingFor:"", pinned:false,
+    });
+    setEditingId("new");
+  };
+  const startEdit = (t) => {
+    setForm({
+      text:t.text, note:t.note, priority:t.priority, project:t.project,
+      deadline:t.deadline||"", status:t.status, waitingFor:t.waitingFor||"", pinned:t.pinned,
+    });
+    setEditingId(t.id);
+  };
+  const saveForm = () => {
+    if (!form.text.trim()) return;
+    if (editingId === "new"){
+      const nt = {
+        id: Date.now()+"", project: form.project,
+        text: form.text.trim(), note: form.note.trim(),
+        priority: form.priority, status: form.status, pinned: form.pinned,
+        waitingFor: form.status==="waiting" ? form.waitingFor.trim() : "",
+        waitingSince: form.status==="waiting" ? Date.now() : null,
+        deadline: form.deadline || "",
+      };
+      if (nt.pinned && tasks.filter(x=>x.pinned).length>=3){
+        const old = tasks.filter(x=>x.pinned)[0]; if (old) updateTask(old.id, { pinned:false });
+      }
+      setTasks(t=>[...t, nt]);
+    } else {
+      const existing = tasks.find(x=>x.id===editingId);
+      updateTask(editingId, {
+        text: form.text.trim(), note: form.note.trim(),
+        priority: form.priority, project: form.project,
+        status: form.status, pinned: form.pinned,
+        waitingFor: form.status==="waiting" ? form.waitingFor.trim() : "",
+        waitingSince: form.status==="waiting"
+          ? (existing.status==="waiting" ? existing.waitingSince : Date.now())
+          : null,
+        deadline: form.deadline || "",
+      });
+    }
+    setEditingId(null);
+  };
+
+  const stats = useMemo(()=>({
+    open:    tasks.filter(t=>t.status==="open").length,
+    waiting: tasks.filter(t=>t.status==="waiting").length,
+    done:    tasks.filter(t=>t.status==="done").length,
+    urgent:  tasks.filter(t=>t.priority==="alta" && t.status!=="done").length,
+    pinned:  tasks.filter(t=>t.pinned && t.status!=="done").length,
+  }), [tasks]);
+
+  const projCounts = useMemo(()=>{
+    const m={}; PROJECTS.forEach(p=>m[p.id]=tasks.filter(t=>t.project===p.id && t.status!=="done").length);
+    return m;
+  }, [tasks]);
+
+  const visible = useMemo(()=>{
+    let a;
+    if (tab==="oggi"){
+      a = tasks.filter(t => t.status!=="done" && (
+        t.pinned || t.priority==="alta" ||
+        (t.deadline && new Date(t.deadline) <= new Date(TODAY))
+      ));
+    } else if (tab==="attesa"){
+      a = tasks.filter(t => t.status==="waiting");
+    } else {
+      a = tasks.filter(t => t.project===tab && (t.status!=="done" || showDone));
+    }
+    return smartSort(a);
+  }, [tasks, tab, showDone]);
+
+  const cur = TM[tab];
+  const isProj = PROJECTS.some(p=>p.id===tab);
+  const doneInTab = isProj ? tasks.filter(t=>t.project===tab && t.status==="done").length : 0;
+
+  return h("div", { style:{ display:"flex", flexDirection: isMobile?"column":"row", height:"100vh", overflow:"hidden" } },
+
+    // SIDEBAR (desktop)
+    !isMobile && h("aside", {
+      style:{ width:260, background:"#0A0908", borderRight:"1px solid #1C1A17",
+              flexShrink:0, display:"flex", flexDirection:"column" }
+    },
+      h("div", { style:{ padding:"28px 20px 14px" } },
+        h("div", { className:"display", style:{ fontSize:26, fontWeight:500, color:"#F5F1E8", lineHeight:1.1 } }, "Operativo"),
+        h("div", { style:{ fontSize:12, color:"#5A5248", marginTop:6, letterSpacing:".08em", textTransform:"uppercase" } }, greeting())
+      ),
+      h("div", { style:{ padding:"0 12px", flex:1, overflowY:"auto" } },
+        h("div", { style:{ fontSize:10, color:"#3A352F", padding:"8px 10px", letterSpacing:".12em", textTransform:"uppercase" } }, "Viste"),
+        ...SPECIAL.map(s => h(SideTab, {
+          key:s.id, t:s, active:tab===s.id,
+          cnt: s.id==="oggi" ? stats.urgent+stats.pinned : stats.waiting,
+          onClick:()=>setTab(s.id),
+        })),
+        h("div", { style:{ fontSize:10, color:"#3A352F", padding:"16px 10px 8px", letterSpacing:".12em", textTransform:"uppercase" } }, "Progetti"),
+        ...PROJECTS.map(p => h(SideTab, {
+          key:p.id, t:p, active:tab===p.id, cnt:projCounts[p.id],
+          onClick:()=>setTab(p.id),
+        })),
+      ),
+      h("div", { style:{ padding:"14px 22px 20px", borderTop:"1px solid #1C1A17" } },
+        [["Aperti", stats.open, "#F5F1E8"], ["In attesa", stats.waiting, "#9CA3AF"], ["Completati", stats.done, "#68D391"]].map(([l,v,c])=>
+          h("div", { key:l, style:{ display:"flex", justifyContent:"space-between", margin:"6px 0", fontSize:12 } },
+            h("span", { style:{ color:"#5A5248" } }, l),
+            h("span", { style:{ color:c, fontWeight:500 } }, v),
+          )
+        )
+      )
+    ),
+
+    // MAIN
+    h("main", { style:{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden", position:"relative" } },
+
+      // MOBILE HEADER + TABS
+      isMobile && h("div", { style:{ padding:"14px 16px 0", flexShrink:0 } },
+        h("div", { style:{ display:"flex", alignItems:"baseline", gap:8 } },
+          h("div", { className:"display", style:{ fontSize:22, fontWeight:500 } }, "Operativo"),
+          h("div", { style:{ fontSize:12, color:"#5A5248" } }, "· " + greeting())
+        )
+      ),
+      isMobile && h("div", { className:"hide-scroll",
+        style:{ display:"flex", gap:6, overflowX:"auto", padding:"12px 16px 4px", flexShrink:0 } },
+        ALL_TABS.map(t=>{
+          const active = tab===t.id;
+          const cnt = t.id==="oggi" ? stats.urgent+stats.pinned
+                    : t.id==="attesa" ? stats.waiting
+                    : projCounts[t.id];
+          return h("button", { key:t.id, onClick:()=>setTab(t.id),
+            style:{
+              padding:"7px 12px", borderRadius:999, fontSize:13, whiteSpace:"nowrap",
+              border:`1px solid ${active?t.color:"#1C1A17"}`,
+              background:active?t.bg:"transparent",
+              color:active?t.color:"#8A8278",
+              display:"flex", alignItems:"center", gap:6, flexShrink:0,
+              fontWeight: active ? 500 : 400,
+            }
+          },
+            h("span", null, t.icon),
+            h("span", null, t.name),
+            cnt>0 && h("span", { style:{
+              fontSize:10, padding:"1px 6px", borderRadius:10,
+              background:active?t.color:"#1C1A17",
+              color:active?"#0F0E0C":"#8A8278",
+              fontWeight:500,
+            } }, cnt)
+          );
+        })
+      ),
+
+      // SCROLL CONTAINER
+      h("div", { style:{ flex:1, overflowY:"auto", paddingBottom:100 } },
+
+        // VIEW HEADER
+        h("div", { style:{ padding: isMobile ? "10px 16px 6px" : "28px 36px 6px" } },
+          h("div", { style:{ display:"flex", alignItems:"center", gap:12 } },
+            h("div", { style:{
+              width: isMobile?38:46, height: isMobile?38:46, borderRadius:12,
+              background:cur.bg, display:"flex", alignItems:"center", justifyContent:"center",
+              fontSize: isMobile?20:22, flexShrink:0,
+            } }, cur.icon),
+            h("div", { style:{ minWidth:0 } },
+              h("h1", { className:"display", style:{
+                fontSize: isMobile?24:34, fontWeight:500, color:"#F5F1E8", lineHeight:1.15,
+              } }, cur.name),
+              h("p", { style:{ fontSize: isMobile?11:13, color:"#5A5248", marginTop:2 } },
+                tab==="oggi"   ? `${stats.pinned} pinnati · ${stats.urgent} urgenti`
+                : tab==="attesa" ? `${stats.waiting} cose in attesa di risposta`
+                : `${projCounts[tab]} aperti${doneInTab ? ` · ${doneInTab} fatti` : ""}`
+              )
+            )
+          )
+        ),
+
+        // CONTEXT BANNER
+        h("div", { style:{ padding: isMobile?"10px 16px 0":"10px 36px 0" } },
+          h(Banner, { tab, stats, visible })
+        ),
+
+        // NOTES PANEL (project tabs only)
+        isProj && h(NotesPanel, {
+          notes: notes[tab]||"", expanded: showNotes,
+          onToggle:()=>setShowNotes(s=>!s),
+          onChange:v=>setNotes(n=>({...n, [tab]:v})),
+          color: cur.color,
+          isMobile,
+        }),
+
+        // TASK LIST
+        h("div", { style:{ padding: isMobile?"14px 16px 20px":"14px 36px 24px" } },
+
+          visible.length===0 && editingId!=="new" && h(Empty, { tab }),
+
+          h("div", { style:{ display:"flex", flexDirection:"column", gap:6 } },
+            visible.map(t =>
+              editingId === t.id
+                ? h(EditForm, { key:t.id, form, setForm, save:saveForm, cancel:()=>setEditingId(null), isNew:false, onDelete:()=>{ deleteTask(t.id); setEditingId(null); } })
+                : h(TaskCard, {
+                    key:t.id, task:t, showProj: tab==="oggi"||tab==="attesa",
+                    onCheck:()=>toggleDone(t.id),
+                    onPin:()=>togglePin(t.id),
+                    onEdit:()=>startEdit(t),
+                  })
+            )
+          ),
+
+          // Show done toggle
+          isProj && doneInTab>0 && h("button", {
+            onClick:()=>setShowDone(s=>!s),
+            style:{ marginTop:14, fontSize:12, color:"#5A5248", padding:"6px 0",
+                    display:"flex", alignItems:"center", gap:8 }
+          },
+            h("span", { style:{ transform: showDone?"rotate(90deg)":"none", display:"inline-block", transition:"transform .15s" } }, "▶"),
+            `${showDone?"Nascondi":"Mostra"} ${doneInTab} completat${doneInTab===1?"o":"i"}`
+          ),
+
+          // Inline new-task form
+          editingId === "new" && h("div", { style:{ marginTop:8 } },
+            h(EditForm, { form, setForm, save:saveForm, cancel:()=>setEditingId(null), isNew:true })
+          ),
+        )
+      ),
+
+      // FAB
+      !editingId && h("button", { onClick:startNew,
+        style:{
+          position:"absolute", right:20, bottom:24,
+          width:56, height:56, borderRadius:"50%",
+          background:"#E8B339", color:"#0F0E0C",
+          fontSize:30, fontWeight:300, lineHeight:1,
+          boxShadow:"0 8px 24px rgba(232,179,57,0.28)",
+          display:"flex", alignItems:"center", justifyContent:"center",
+          zIndex:10,
+        }
+      }, "+")
+    )
+  );
+}
+
+// ============ COMPONENTS ============
+
+function SideTab({ t, active, cnt, onClick }){
+  return h("button", { onClick,
+    style:{
+      display:"flex", alignItems:"center", gap:10, width:"100%", padding:"9px 12px",
+      borderRadius:8, textAlign:"left",
+      background:active?t.bg:"transparent",
+      color:active?t.color:"#8A8278",
+      fontSize:14, fontWeight:active?500:400,
+      transition:"background .12s",
+    },
+    onMouseEnter:e=>{ if(!active) e.currentTarget.style.background="#15130F"; },
+    onMouseLeave:e=>{ if(!active) e.currentTarget.style.background="transparent"; }
+  },
+    h("span", { style:{ fontSize:16 } }, t.icon),
+    h("span", { style:{ flex:1 } }, t.name),
+    cnt>0 && h("span", { style:{
+      fontSize:11, padding:"1px 7px", borderRadius:10,
+      background: active?t.color:"#1C1A17",
+      color: active?"#0F0E0C":"#8A8278", fontWeight:500,
+    } }, cnt)
+  );
+}
+
+function Banner({ tab, stats, visible }){
+  let c = null;
+  if (tab==="oggi"){
+    if (stats.pinned===0 && stats.urgent===0){
+      c = { icon:"🌿", color:"#68D391", bg:"rgba(104,211,145,0.08)", text:"Niente di urgente oggi. Ottimo momento per lavoro profondo sui progetti in standby." };
+    } else {
+      c = { icon:"🎯", color:"#E8B339", bg:"rgba(232,179,57,0.08)", text:"Focus della giornata. Completa questi prima di passare ad altro." };
+    }
+  } else if (tab==="attesa"){
+    const stale = visible.filter(t=>daysAgo(t.waitingSince)>=5).length;
+    c = {
+      icon: stale>0 ? "⚠️" : "⏸",
+      color: stale>0 ? "#FC8181" : "#9CA3AF",
+      bg: stale>0 ? "rgba(252,129,129,0.08)" : "rgba(156,163,175,0.06)",
+      text: stale>0
+        ? `${stale} cos${stale===1?"a":"e"} che aspetti da troppo. Manda un sollecito.`
+        : "Cose su cui sei bloccato. Sollecita dopo 3-5 giorni."
+    };
+  }
+  if (!c) return null;
+  return h("div", { className:"su",
+    style:{
+      padding:"11px 14px", borderRadius:10,
+      background:c.bg, border:`1px solid ${c.color}33`,
+      fontSize:13, color:c.color, lineHeight:1.45,
+      display:"flex", gap:10, alignItems:"flex-start",
+    }
+  },
+    h("span", { style:{ fontSize:16, lineHeight:1 } }, c.icon),
+    h("span", null, c.text)
+  );
+}
+
+function NotesPanel({ notes, expanded, onToggle, onChange, color, isMobile }){
+  return h("div", { style:{ padding: isMobile?"14px 16px 0":"14px 36px 0" } },
+    h("button", { onClick:onToggle,
+      style:{ display:"flex", alignItems:"center", gap:8, fontSize:12, color:"#8A8278", padding:"4px 0" }
+    },
+      h("span", { style:{ transform:expanded?"rotate(90deg)":"none", display:"inline-block", transition:"transform .15s" } }, "▶"),
+      h("span", null, "📝  Note del progetto"),
+      notes && !expanded && h("span", { style:{ color:"#5A5248", fontSize:11 } },
+        " · " + (notes.split("\n").find(l=>l.trim()) || "vuoto").slice(0,38)
+      )
+    ),
+    expanded && h("textarea", { className:"notes-area su",
+      value:notes,
+      onChange:e=>onChange(e.target.value),
+      placeholder:"Idee, appunti, brainstorm...",
+      style:{ marginTop:8, borderColor:`${color}44` }
+    })
+  );
+}
+
+function Empty({ tab }){
+  return h("div", { className:"su", style:{ textAlign:"center", padding:"56px 0" } },
+    h("div", { className:"display", style:{ fontSize:22, color:"#3A352F", marginBottom:8 } },
+      tab==="oggi" ? "Tutto sotto controllo." :
+      tab==="attesa" ? "Niente in stallo." :
+      "Nessun task qui."
+    ),
+    h("p", { style:{ fontSize:13, color:"#3A352F" } },
+      tab==="oggi" ? "Pinna 1-3 task come priorità del giorno." :
+      tab==="attesa" ? "Quando aspetti risposta da qualcuno, tagga il task come 'in attesa'." :
+      "Tocca + in basso per aggiungerne uno."
+    )
+  );
+}
+
+function TaskCard({ task, showProj, onCheck, onPin, onEdit }){
+  const proj = PROJECTS.find(p=>p.id===task.project);
+  const prio = PRIO[task.priority];
+  const dl = formatDeadline(task.deadline);
+  const wd = task.status==="waiting" ? daysAgo(task.waitingSince) : 0;
+  const stale = wd>=5;
+  const veryStale = wd>=10;
+
+  return h("div", { className:"task-row su",
+    style:{
+      display:"flex", gap:10, alignItems:"flex-start", padding:"12px 14px",
+      borderRadius:10,
+      border: task.pinned ? "1px solid rgba(232,179,57,0.25)" : "1px solid #1C1A17",
+      background: task.pinned ? "rgba(232,179,57,0.04)" : "#12100E",
+      opacity: task.status==="done" ? 0.4 : 1,
+      position:"relative", overflow:"hidden",
+    }
+  },
+    // stripe
+    h("div", { style:{ position:"absolute", left:0, top:8, bottom:8, width:3, borderRadius:2, background:proj?.color||"#3A352F" } }),
+
+    // status circle
+    h("button", { onClick:onCheck, "aria-label":"Cambia stato",
+      style:{
+        width:24, height:24, borderRadius:"50%", flexShrink:0, marginTop:2, marginLeft:6,
+        border: task.status==="done" ? "none" : `1.5px solid ${proj?.color||"#3A352F"}`,
+        background: task.status==="done" ? (proj?.color||"#3A352F") : "transparent",
+        display:"flex", alignItems:"center", justifyContent:"center", padding:0,
+      }
+    },
+      task.status==="done"    && h("span", { style:{ color:"#0F0E0C", fontSize:14, fontWeight:700 } }, "✓"),
+      task.status==="waiting" && h("span", { style:{ color:proj?.color, fontSize:11, lineHeight:1 } }, "⏸")
+    ),
+
+    // body — clickable to edit
+    h("div", { onClick:onEdit, style:{ flex:1, minWidth:0, paddingTop:1, cursor:"pointer" } },
+      h("div", { style:{ display:"flex", alignItems:"center", gap:6, flexWrap:"wrap" } },
+        task.pinned && h("span", { style:{ color:"#E8B339", fontSize:13, lineHeight:1 } }, "★"),
+        h("span", { style:{
+          fontSize:15, color:"#F5F1E8", lineHeight:1.4,
+          textDecoration: task.status==="done" ? "line-through" : "none",
+        } }, task.text),
+        h("span", { style:{
+          fontSize:11, fontWeight:500, padding:"2px 7px", borderRadius:10,
+          background:prio.bg, color:prio.color, flexShrink:0,
+        } }, prio.label),
+        dl && h("span", { style:{
+          fontSize:11, fontWeight:500, padding:"2px 7px", borderRadius:10,
+          background:dl.bg, color:dl.color, flexShrink:0,
+        } }, dl.text),
+        showProj && proj && h("span", { style:{
+          fontSize:11, fontWeight:500, padding:"2px 7px", borderRadius:10,
+          background:proj.bg, color:proj.color, flexShrink:0,
+        } }, proj.icon + " " + proj.name),
+      ),
+      task.status==="waiting" && task.waitingFor && h("div", {
+        style:{ marginTop:6, fontSize:12, color: stale?"#FC8181":"#9CA3AF",
+                display:"flex", alignItems:"center", gap:6, flexWrap:"wrap" }
+      },
+        h("span", null, "⏸ Aspetto:"),
+        h("span", { style:{ color:"#C8C2B5" } }, task.waitingFor),
+        h("span", { style:{ color:"#3A352F" } }, "·"),
+        h("span", { style:{ fontWeight: stale?500:400 } },
+          wd===0 ? "da oggi" : `da ${wd}g`
+        ),
+        veryStale && h("span", { style:{
+          marginLeft:2, fontSize:10, padding:"1px 7px", borderRadius:8,
+          background:"rgba(252,129,129,0.18)", color:"#FC8181", fontWeight:600, letterSpacing:".05em",
+        } }, "SOLLECITA")
+      ),
+      task.note && h("p", { style:{ margin:"5px 0 0", fontSize:12, color:"#7A7268", lineHeight:1.5 } }, task.note)
+    ),
+
+    // pin button
+    h("button", { onClick: e => { e.stopPropagation(); onPin(); }, "aria-label":"Pin",
+      style:{
+        width:30, height:30, display:"inline-flex", alignItems:"center", justifyContent:"center",
+        borderRadius:6, color: task.pinned?"#E8B339":"#3A352F", fontSize:17, flexShrink:0,
+      }
+    }, "★")
+  );
+}
+
+function EditForm({ form, setForm, save, cancel, isNew, onDelete }){
+  return h("div", { className:"su",
+    style:{ padding:16, borderRadius:12, background:"#15130F", border:"1px solid #2A2724" }
+  },
+    h("input", { autoFocus:true, placeholder:"Cosa devi fare?",
+      value:form.text,
+      onChange:e=>setForm(f=>({...f, text:e.target.value})),
+      onKeyDown:e=>{ if (e.key==="Enter" && !e.shiftKey){ e.preventDefault(); save(); } if (e.key==="Escape") cancel(); },
+      style:{ width:"100%", fontSize:16, marginBottom:10, color:"#F5F1E8" }
+    }),
+    h("textarea", { placeholder:"Note (opzionale)",
+      value:form.note, rows:2,
+      onChange:e=>setForm(f=>({...f, note:e.target.value})),
+      style:{ width:"100%", fontSize:13, color:"#A8A095", resize:"vertical", marginBottom:12, lineHeight:1.5 }
+    }),
+    h("div", { style:{ display:"flex", flexWrap:"wrap", gap:8, marginBottom:10, alignItems:"center" } },
+      h("select", { value:form.priority,
+        onChange:e=>setForm(f=>({...f, priority:e.target.value})),
+        style:{ padding:"7px 10px", fontSize:13, borderRadius:8, border:"1px solid #2A2724" } },
+        h("option", { value:"alta"  }, "🔴 Alta"),
+        h("option", { value:"media" }, "🟡 Media"),
+        h("option", { value:"bassa" }, "🟢 Bassa"),
+      ),
+      h("select", { value:form.project,
+        onChange:e=>setForm(f=>({...f, project:e.target.value})),
+        style:{ padding:"7px 10px", fontSize:13, borderRadius:8, border:"1px solid #2A2724" } },
+        PROJECTS.map(p => h("option", { key:p.id, value:p.id }, p.name))
+      ),
+      h("input", { type:"date", value:form.deadline,
+        onChange:e=>setForm(f=>({...f, deadline:e.target.value})),
+        style:{ padding:"6px 10px", fontSize:13, borderRadius:8, border:"1px solid #2A2724", background:"#1C1A17", colorScheme:"dark" }
+      })
+    ),
+    h("div", { style:{ display:"flex", flexWrap:"wrap", gap:10, alignItems:"center", marginBottom:14, padding:"10px 12px", background:"rgba(0,0,0,0.18)", borderRadius:8 } },
+      h("label", { style:{ display:"flex", alignItems:"center", gap:6, fontSize:13, color:"#A8A095", cursor:"pointer" } },
+        h("input", { type:"checkbox", checked:form.pinned,
+          onChange:e=>setForm(f=>({...f, pinned:e.target.checked})),
+          style:{ accentColor:"#E8B339", width:16, height:16 }
+        }),
+        "★ Pin oggi"
+      ),
+      h("label", { style:{ display:"flex", alignItems:"center", gap:6, fontSize:13, color:"#A8A095", cursor:"pointer" } },
+        h("input", { type:"checkbox", checked:form.status==="waiting",
+          onChange:e=>setForm(f=>({...f, status: e.target.checked?"waiting":"open"})),
+          style:{ accentColor:"#9CA3AF", width:16, height:16 }
+        }),
+        "⏸ In attesa di"
+      ),
+      form.status==="waiting" && h("input", {
+        placeholder:"chi/cosa? (es. Paolo per acconto)",
+        value:form.waitingFor,
+        onChange:e=>setForm(f=>({...f, waitingFor:e.target.value})),
+        style:{ flex:1, minWidth:140, fontSize:13, color:"#F5F1E8",
+                padding:"6px 10px", borderRadius:6, border:"1px solid #2A2724", background:"#0F0E0C" }
+      })
+    ),
+    h("div", { style:{ display:"flex", gap:8, alignItems:"center" } },
+      !isNew && h("button", { onClick:onDelete,
+        style:{ padding:"8px 12px", fontSize:13, color:"#FC8181", borderRadius:8, border:"1px solid rgba(252,129,129,0.2)" }
+      }, "🗑 Elimina"),
+      h("div", { style:{ flex:1 } }),
+      h("button", { onClick:cancel,
+        style:{ padding:"8px 16px", fontSize:13, color:"#8A8278", borderRadius:8, border:"1px solid #2A2724" }
+      }, "Annulla"),
+      h("button", { onClick:save,
+        style:{ padding:"8px 18px", fontSize:13, color:"#0F0E0C", background:"#E8B339", borderRadius:8, fontWeight:500 }
+      }, isNew ? "Aggiungi" : "Salva")
+    )
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(h(App));
+</script>
+</body>
+</html>
